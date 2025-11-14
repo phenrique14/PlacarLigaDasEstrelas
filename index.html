@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-M8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Placar Futsal - Liga das Estrelas</title>
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1a1a1a;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        #league-logo {
+            max-width: 150px;
+            margin: 20px 0;
+        }
+
+        #toggle-panel-btn {
+            font-size: 1.2em;
+            padding: 10px 20px;
+            margin-bottom: 20px;
+            cursor: pointer;
+            background-color: #ffc107;
+            color: #111;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .config-controls {
+            background-color: #333;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .config-controls label, .config-controls select, .config-controls button {
+            font-size: 1em;
+            padding: 5px;
+        }
+
+        .scoreboard {
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            width: 90%;
+            max-width: 1200px;
+            background-color: #222;
+            border: 2px solid #555;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        .team {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-around;
+            color: #ffffff;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+            transition: background-image 0.5s ease;
+        }
+
+        .team-logo {
+            width: 100px;
+            height: 100px;
+            background-color: #fff;
+            border: 5px solid #fff;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 10px;
+        }
+
+        .team-name {
+            font-size: 2.5em;
+            min-height: 80px;
+            font-weight: bold;
+        }
+
+        .team-score {
+            font-size: 8em;
+            font-weight: bold;
+            line-height: 1;
+            cursor: pointer;
+            user-select: none;
+        }
+        .team-score:hover {
+            transform: scale(1.05);
+            transition: transform 0.2s;
+        }
+
+        .center-column {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-around;
+            padding: 20px;
+            background-color: #111;
+            border-left: 2px solid #555;
+            border-right: 2px solid #555;
+        }
+
+        #game-half {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #ffc107;
+            text-shadow: 0 0 10px #ffc107;
+        }
+
+        #main-timer {
+            font-size: 7em;
+            font-weight: bold;
+            font-family: 'Courier New', Courier, monospace;
+            padding: 10px 20px;
+            background-color: #000;
+            border: 5px solid #444;
+            border-radius: 10px;
+            color: #ffc107;
+            text-shadow: 0 0 10px #ffc107;
+            transition: color 0.3s, text-shadow 0.3s;
+        }
+
+        #main-timer.timer-ended {
+            color: #ff0000;
+            text-shadow: 0 0 10px #ff0000, 0 0 20px #ff0000;
+            animation: flash 0.5s infinite alternate;
+        }
+
+        .timer-controls button {
+            font-size: 1.2em;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+
+        .team-info { width: 100%; margin-top: 20px; }
+        .info-label { font-size: 1.8em; margin-bottom: 10px; font-weight: bold; }
+        .info-value {
+            font-size: 3em;
+            font-weight: bold;
+            margin: 0 20px;
+            padding: 5px 15px;
+            background-color: rgba(0,0,0,0.2);
+            border-radius: 8px;
+        }
+        .info-value.alert {
+            background-color: #ffc107;
+            color: #333;
+            text-shadow: none;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes flash {
+            from { opacity: 1; }
+            to { opacity: 0.5; }
+        }
+
+        .timeout-button {
+            font-size: 1em;
+            padding: 10px;
+            width: 80%;
+            margin-top: 10px;
+            cursor: pointer;
+            border: 2px solid #fff;
+            background-color: transparent;
+            color: #fff;
+        }
+        .timeout-button:hover { background-color: rgba(255,255,255,0.2); }
+        .timeout-button:disabled {
+            background-color: rgba(0,0,0,0.2);
+            border-color: #666;
+            color: #666;
+            cursor: not-allowed;
+        }
+
+        .manual-controls {
+            display: none;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        .control-group {
+            background-color: #333;
+            padding: 15px;
+            border-radius: 10px;
+        }
+        .control-group h3 { margin-top: 0; }
+        .control-group button { font-size: 1em; padding: 8px; margin: 2px; min-width: 45px; }
+
+        .keyboard-helper {
+            margin-top: 20px;
+            background-color: #222;
+            border: 1px solid #444;
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 1200px;
+            display: none;
+        }
+        .keyboard-helper h3 { margin-top: 0; color: #00aaff; }
+        .keyboard-helper p { margin: 5px 0; font-size: 1.1em; }
+
+        #timeout-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.85);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        #timeout-display {
+            font-size: 15vw;
+            color: #ffc107;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        #close-timeout-btn {
+            font-size: 1.5em;
+            padding: 10px 30px;
+            margin-top: 30px;
+            background-color: #ffc107;
+            color: #111;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+    </style>
+</head>
+<body>
+
+    <img id="league-logo" src="ligalogo.png" alt="Logo da Liga">
+
+    <button id="toggle-panel-btn" onclick="toggleOperatorPanel()">Mostrar Painel do Operador</button>
+
+    <div class="config-controls">
+        <div>
+            <label for="team-a-select">Time da Casa:</label>
+            <select id="team-a-select" onchange="updateTeam('a')">
+                </select>
+        </div>
+        <div>
+            <label for="team-b-select">Time Visitante:</label>
+            <select id="team-b-select" onchange="updateTeam('b')">
+                </select>
+        </div>
+        <div>
+            <label for="timer-duration">Duração:</label>
+            <select id="timer-duration" onchange="resetMainTimer()">
+                <option value="900">15 min</option>
+                <option value="480">8 min</option>
+                <option value="300">5 min</option>
+            </select>
+        </div>
+        <div>
+            <label for="game-half-select">Tempo:</label>
+            <select id="game-half-select" onchange="changeGameHalf()">
+                <option value="1">1º Tempo</option>
+                <option value="2">2º Tempo</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="scoreboard">
+        <div class="team team-a">
+            <img id="team-a-logo" src="" alt="Logo Time A" class="team-logo">
+            <h2 id="team-a-name" class="team-name">Time A</h2>
+            <div id="team-a-score" class="team-score" onclick="changeScore('a', 1)">0</div>
+            <div class="team-info">
+                <span class="info-label">FALTAS</span>
+                <span id="team-a-fouls" class="info-value">0</span>
+                <button id="team-a-timeout" class="timeout-button" onclick="requestTimeout('a')">Pedir Tempo</button>
+            </div>
+        </div>
+
+        <div class="center-column">
+            <h2 id="game-half">1º Tempo</h2>
+            <div id="main-timer">15:00</div>
+            <div class="timer-controls">
+                <button id="start-pause-btn" onclick="startPauseMainTimer()">INICIAR</button>
+                <button onclick="resetMainTimer()">REINICIAR TEMPO</button>
+            </div>
+        </div>
+
+        <div class="team team-b">
+            <img id="team-b-logo" src="" alt="Logo Time B" class="team-logo">
+            <h2 id="team-b-name" class="team-name">Time B</h2>
+            <div id="team-b-score" class="team-score" onclick="changeScore('b', 1)">0</div>
+            <div class="team-info">
+                <span class="info-label">FALTAS</span>
+                <span id="team-b-fouls" class="info-value">0</span>
+                <button id="team-b-timeout" class="timeout-button" onclick="requestTimeout('b')">Pedir Tempo</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="manual-controls">
+        <div class="control-group">
+            <h3>Controle de Gols</h3>
+            <button onclick="changeScore('a', 1)">+1 Time A</button>
+            <button onclick="changeScore('a', -1)">-1 Time A</button>
+            <br>
+            <button onclick="changeScore('b', 1)">+1 Time B</button>
+            <button onclick="changeScore('b', -1)">-1 Time B</button>
+        </div>
+        <div class="control-group">
+            <h3>Controle de Faltas</h3>
+            <button onclick="changeFouls('a', 1)">+1 Falta A</button>
+            <button onclick="changeFouls('a', -1)">-1 Falta A</button>
+            <br>
+            <button onclick="changeFouls('b', 1)">+1 Falta B</button>
+            <button onclick="changeFouls('b', -1)">-1 Falta B</button>
+        </div>
+        <div class="control-group">
+            <h3>Ajuste do Cronômetro</h3>
+            <button onclick="adjustMainTimer(60)">+ 1:00</button>
+            <button onclick="adjustMainTimer(-60)">- 1:00</button>
+            <br>
+            <button onclick="adjustMainTimer(10)">+ 0:10</button>
+            <button onclick="adjustMainTimer(-10)">- 0:10</button>
+            <br>
+            <button onclick="forcePauseTimer()" style="width: 100%; margin-top: 5px; background-color: #ffc107; color: #111;">PAUSAR (Assistente)</button>
+        </div>
+    </div>
+
+    <div class="keyboard-helper">
+        <h3>Atalhos de Teclado</h3>
+        <p><b>Time A (Esquerda):</b> Tecla <b>'+'</b> (Adicionar Gol) | Tecla <b>'-'</b> (Remover Gol)</p>
+        <p><b>Time B (Direita):</b> Tecla <b>'*'</b> (Adicionar Gol - Numpad) | Tecla <b>'/'</b> (Remover Gol - Numpad)</p>
+        <p><b>Cronômetro:</b> <b>'Barra de Espaço'</b> (Iniciar/Pausar)</p>
+    </div>
+
+
+    <div id="timeout-modal">
+        <div id="timeout-display">01:00</div>
+        <button id="close-timeout-btn" onclick="closeTimeoutModal()">Encerrar</button>
+    </div>
+
+
+    <script>
+        // --- DADOS DOS TIMES ---
+        const teams = {
+            "time1": { name: "1ºB D.S", logo: "time1.png", color: "#00bfff" },
+            "time2": { name: "2ºB D.S", logo: "time2.png", color: "#800080" },
+            "time3": { name: "3ºB Info", logo: "time3.png", color: "#CC0000" },
+            "time4": { name: "3ºA Agro", logo: "time4.png", color: "#800000" }
+        };
+
+        // --- VARIÁVEIS DE ESTADO DO JOGO ---
+        let mainTimerInterval;
+        let mainTimerSeconds = 900;
+        let mainTimerRunning = false;
+        
+        let timeoutTimerInterval;
+        let timeoutTimerSeconds = 60;
+
+        let score = { a: 0, b: 0 };
+        let fouls = { a: 0, b: 0 };
+        let currentHalf = 1;
+        let timeoutsUsed = { a: { 1: false, 2: false }, b: { 1: false, 2: false } };
+
+        // --- REFERÊNCIAS AOS ELEMENTOS DO HTML (DOM) ---
+        const dom = {
+            togglePanelBtn: document.getElementById('toggle-panel-btn'),
+            configControls: document.querySelector('.config-controls'),
+            manualControls: document.querySelector('.manual-controls'),
+            keyboardHelper: document.querySelector('.keyboard-helper'),
+            
+            teamASelect: document.getElementById('team-a-select'),
+            teamBSelect: document.getElementById('team-b-select'),
+            
+            teamADiv: document.querySelector('.team-a'),
+            teamALogo: document.getElementById('team-a-logo'),
+            teamAName: document.getElementById('team-a-name'),
+            teamAScore: document.getElementById('team-a-score'),
+            teamAFouls: document.getElementById('team-a-fouls'),
+            teamATimeoutBtn: document.getElementById('team-a-timeout'),
+            
+            teamBDiv: document.querySelector('.team-b'),
+            teamBLogo: document.getElementById('team-b-logo'),
+            teamBName: document.getElementById('team-b-name'),
+            teamBScore: document.getElementById('team-b-score'),
+            teamBFouls: document.getElementById('team-b-fouls'),
+            teamBTimeoutBtn: document.getElementById('team-b-timeout'),
+
+            mainTimerDisplay: document.getElementById('main-timer'),
+            startPauseBtn: document.getElementById('start-pause-btn'),
+            durationSelect: document.getElementById('timer-duration'),
+            halfSelect: document.getElementById('game-half-select'),
+            halfDisplay: document.getElementById('game-half'),
+
+            timeoutModal: document.getElementById('timeout-modal'),
+            timeoutDisplay: document.getElementById('timeout-display')
+        };
+        
+        // --- FUNÇÃO PARA MOSTRAR/ESCONDER PAINÉIS ---
+        function toggleOperatorPanel() {
+            const panels = [dom.configControls, dom.manualControls, dom.keyboardHelper];
+            
+            if (window.getComputedStyle(dom.configControls).display === 'flex') {
+                panels.forEach(panel => panel.style.display = 'none');
+                dom.togglePanelBtn.textContent = 'Mostrar Painel do Operador';
+            } else {
+                dom.configControls.style.display = 'flex';
+                dom.manualControls.style.display = 'flex';
+                dom.keyboardHelper.style.display = 'block';
+                dom.togglePanelBtn.textContent = 'Esconder Painel do Operador';
+            }
+        }
+
+        // --- INICIALIZAÇÃO ---
+        function initializeSelectors() {
+            Object.keys(teams).forEach(key => {
+                let optionA = document.createElement('option');
+                optionA.value = key;
+                optionA.textContent = teams[key].name;
+                dom.teamASelect.appendChild(optionA);
+
+                let optionB = document.createElement('option');
+                optionB.value = key;
+                optionB.textContent = teams[key].name;
+                dom.teamBSelect.appendChild(optionB);
+            });
+            dom.teamASelect.value = "time1";
+            dom.teamBSelect.value = "time2";
+            updateTeam('a');
+            updateTeam('b');
+            resetMainTimer();
+        }
+
+        // --- FUNÇÕES DE CONTROLE DOS TIMES ---
+        function updateTeam(team) {
+            const selectEl = (team === 'a') ? dom.teamASelect : dom.teamBSelect;
+            const logoEl = (team === 'a') ? dom.teamALogo : dom.teamBLogo;
+            const nameEl = (team === 'a') ? dom.teamAName : dom.teamBName;
+            const teamDiv = (team === 'a') ? dom.teamADiv : dom.teamBDiv;
+            
+            const teamKey = selectEl.value;
+            if (teamKey && teams[teamKey]) {
+                logoEl.src = teams[teamKey].logo;
+                nameEl.textContent = teams[teamKey].name;
+                teamDiv.style.backgroundImage = `linear-gradient(135deg, ${teams[teamKey].color} 0%, #111 100%)`;
+            }
+        }
+
+        // --- FUNÇÕES DO CRONÔMETRO PRINCIPAL ---
+        function startPauseMainTimer() {
+            if (mainTimerRunning) {
+                clearInterval(mainTimerInterval);
+                mainTimerRunning = false;
+                dom.startPauseBtn.textContent = "CONTINUAR";
+            } else {
+                mainTimerRunning = true;
+                dom.startPauseBtn.textContent = "PAUSAR";
+                mainTimerTick(); 
+                mainTimerInterval = setInterval(mainTimerTick, 1000);
+            }
+        }
+
+        function mainTimerTick() {
+            if (mainTimerSeconds > 0) {
+                mainTimerSeconds--;
+                updateMainTimerDisplay();
+            } else {
+                clearInterval(mainTimerInterval);
+                mainTimerRunning = false;
+                dom.startPauseBtn.textContent = "INICIAR";
+                dom.mainTimerDisplay.classList.add('timer-ended');
+                alert("FIM DO TEMPO!");
+            }
+        }
+
+        function updateMainTimerDisplay() {
+            const minutes = Math.floor(mainTimerSeconds / 60);
+            const seconds = mainTimerSeconds % 60;
+            dom.mainTimerDisplay.textContent = `${pad(minutes)}:${pad(seconds)}`;
+        }
+
+        function resetMainTimer() {
+            clearInterval(mainTimerInterval);
+            mainTimerRunning = false;
+            mainTimerSeconds = parseInt(dom.durationSelect.value, 10);
+            updateMainTimerDisplay();
+            dom.startPauseBtn.textContent = "INICIAR";
+            dom.mainTimerDisplay.classList.remove('timer-ended');
+        }
+
+        function adjustMainTimer(seconds) {
+            mainTimerSeconds += seconds;
+            if (mainTimerSeconds < 0) mainTimerSeconds = 0;
+            
+            if (mainTimerSeconds > 0) {
+                dom.mainTimerDisplay.classList.remove('timer-ended');
+            }
+            
+            updateMainTimerDisplay();
+        }
+
+        // NOVO: Função do botão assistente de pausa
+        function forcePauseTimer() {
+            if (mainTimerRunning) {
+                clearInterval(mainTimerInterval);
+                mainTimerRunning = false;
+                dom.startPauseBtn.textContent = "CONTINUAR";
+            }
+            // Se já estiver pausado, não faz nada
+        }
+
+        // --- FUNÇÕES DE PONTUAÇÃO E FALTAS ---
+        function changeScore(team, amount) {
+            score[team] += amount;
+            if (score[team] < 0) score[team] = 0;
+            dom[team === 'a' ? 'teamAScore' : 'teamBScore'].textContent = score[team];
+        }
+
+        function changeFouls(team, amount) {
+            fouls[team] += amount;
+            if (fouls[team] < 0) fouls[team] = 0;
+            
+            const foulEl = (team === 'a') ? dom.teamAFouls : dom.teamBFouls;
+            foulEl.textContent = fouls[team];
+            
+            if (fouls[team] >= 5) {
+                foulEl.classList.add('alert');
+                if (amount > 0) {
+                    alert(`ALERTA: 5ª falta do ${teams[dom[team === 'a' ? 'teamASelect' : 'teamBSelect'].value].name}!`);
+                }
+            } else {
+                foulEl.classList.remove('alert');
+            }
+        }
+
+        // --- FUNÇÕES DE TEMPO DE JOGO (HALF) ---
+        function changeGameHalf() {
+            currentHalf = parseInt(dom.halfSelect.value, 10);
+            dom.halfDisplay.textContent = `${currentHalf}º Tempo`;
+            fouls.a = 0;
+            fouls.b = 0;
+            updateFoulDisplay();
+            checkTimeoutButtons();
+            resetMainTimer();
+        }
+
+        function updateFoulDisplay() {
+            dom.teamAFouls.textContent = fouls.a;
+            dom.teamBFouls.textContent = fouls.b;
+            dom.teamAFouls.classList.remove('alert');
+            dom.teamBFouls.classList.remove('alert');
+        }
+
+        // --- FUNÇÕES DE TEMPO PEDIDO (TIMEOUT) ---
+        function checkTimeoutButtons() {
+            dom.teamATimeoutBtn.disabled = timeoutsUsed.a[currentHalf];
+            dom.teamBTimeoutBtn.disabled = timeoutsUsed.b[currentHalf];
+        }
+
+        function requestTimeout(team) {
+            if (timeoutsUsed[team][currentHalf]) {
+                alert("Tempo já utilizado neste período.");
+                return;
+            }
+            if (mainTimerRunning) {
+                startPauseMainTimer();
+            }
+            timeoutsUsed[team][currentHalf] = true;
+            (team === 'a' ? dom.teamATimeoutBtn : dom.teamBTimeoutBtn).disabled = true;
+            startTimeoutTimer();
+        }
+
+        function startTimeoutTimer() {
+            timeoutTimerSeconds = 60;
+            dom.timeoutDisplay.textContent = `01:00`;
+            dom.timeoutModal.style.display = 'flex';
+
+            timeoutTimerInterval = setInterval(() => {
+                timeoutTimerSeconds--;
+                const minutes = Math.floor(timeoutTimerSeconds / 60);
+                const seconds = timeoutTimerSeconds % 60;
+                dom.timeoutDisplay.textContent = `${pad(minutes)}:${pad(seconds)}`;
+
+                if (timeoutTimerSeconds <= 0) {
+                    closeTimeoutModal();
+                    alert("Fim do tempo pedido!");
+                }
+            }, 1000);
+        }
+
+        function closeTimeoutModal() {
+            clearInterval(timeoutTimerInterval);
+            dom.timeoutModal.style.display = 'none';
+        }
+
+        // --- FUNÇÃO UTILITÁRIA ---
+        function pad(num) {
+            return num < 10 ? '0' + num : num;
+        }
+
+        // --- ATALHOS DE TECLADO ---
+        window.addEventListener('keydown', function(e) {
+            if (document.activeElement.tagName === 'SELECT' || document.activeElement.tagName === 'BUTTON') {
+                return;
+            }
+            if (e.key === ' ' || e.key === '/' || e.key === '+' || e.key === '-') {
+                e.preventDefault();
+            }
+            switch(e.key) {
+                case '+': case '=':
+                    changeScore('a', 1);
+                    break;
+                case '-': case '_':
+                    changeScore('a', -1);
+                    break;
+                case '*':
+                    changeScore('b', 1);
+                    break;
+                case '/':
+                    changeScore('b', -1);
+                    break;
+                case ' ':
+                    startPauseMainTimer();
+                    break;
+            }
+        });
+
+        // --- INICIAR A APLICAÇÃO ---
+        window.onload = initializeSelectors;
+
+    </script>
+</body>
+</html>

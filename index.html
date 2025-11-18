@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-M8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Placar Futsal - Liga das Estrelas</title>
+    <title>Placar Multi-Esporte - Liga das Estrelas</title>
     
     <style>
         body {
@@ -14,11 +14,27 @@
             flex-direction: column;
             align-items: center;
             text-align: center;
+            padding: 0 10px;
         }
 
         #league-logo {
             max-width: 150px;
             margin: 20px 0;
+        }
+        
+        .sport-selector {
+            background-color: #333;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        .sport-selector label {
+            font-size: 1.2em;
+            margin-right: 10px;
+        }
+        #sport-select {
+            font-size: 1.2em;
+            padding: 5px;
         }
 
         #toggle-panel-btn {
@@ -72,13 +88,13 @@
         }
 
         .team-logo {
-            width: 100px;
-            height: 100px;
+            width: 200px;
+            height: 200px;
             background-color: #fff;
-            border: 5px solid #fff;
+            border: 8px solid #fff;
             border-radius: 50%;
-            object-fit: cover;
-            margin-bottom: 10px;
+            object-fit: contain;
+            margin-bottom: 15px;
         }
 
         .team-name {
@@ -93,12 +109,12 @@
             line-height: 1;
             cursor: pointer;
             user-select: none;
+            transition: transform 0.2s;
         }
         .team-score:hover {
             transform: scale(1.05);
-            transition: transform 0.2s;
         }
-
+        
         .center-column {
             display: flex;
             flex-direction: column;
@@ -110,32 +126,55 @@
             border-right: 2px solid #555;
         }
 
-        #game-half {
+        .digital-text {
             font-size: 1.8em;
             font-weight: bold;
             color: #ffc107;
             text-shadow: 0 0 10px #ffc107;
         }
 
+        #main-timer-container {
+            display: block;
+        }
+        
         #main-timer {
             font-size: 7em;
-            font-weight: bold;
-            font-family: 'Courier New', Courier, monospace;
             padding: 10px 20px;
             background-color: #000;
             border: 5px solid #444;
             border-radius: 10px;
+            transition: color 0.3s, text-shadow 0.3s;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
             color: #ffc107;
             text-shadow: 0 0 10px #ffc107;
-            transition: color 0.3s, text-shadow 0.3s;
         }
-
         #main-timer.timer-ended {
             color: #ff0000;
             text-shadow: 0 0 10px #ff0000, 0 0 20px #ff0000;
-            animation: flash 0.5s infinite alternate;
+            animation: flash-opacity 0.5s infinite alternate;
         }
 
+        #volleyball-points-container {
+            display: none;
+            flex-direction: row;
+            justify-content: space-around;
+            align-items: center;
+            width: 100%;
+        }
+        .volleyball-point {
+            font-size: 6em;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            color: #ffc107;
+            text-shadow: 0 0 10px #ffc107;
+            line-height: 1.2;
+            padding: 0 10px;
+        }
+
+        .timer-controls {
+            display: block;
+        }
         .timer-controls button {
             font-size: 1.2em;
             padding: 10px 20px;
@@ -160,90 +199,105 @@
             animation: pulse 1s infinite;
         }
 
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        @keyframes flash-opacity { from { opacity: 1; } to { opacity: 0.5; } }
         
-        @keyframes flash {
-            from { opacity: 1; }
-            to { opacity: 0.5; }
+        @keyframes flash-background {
+            from { background-color: #ffc107; color: #111; }
+            to   { background-color: transparent; color: #fff; }
+        }
+        .timeout-button.waiting-for-key {
+            animation: flash-background 0.5s infinite alternate;
         }
 
         .timeout-button {
-            font-size: 1em;
-            padding: 10px;
-            width: 80%;
-            margin-top: 10px;
-            cursor: pointer;
-            border: 2px solid #fff;
-            background-color: transparent;
-            color: #fff;
+            font-size: 1em; padding: 10px; width: 80%; margin-top: 10px; cursor: pointer;
+            border: 2px solid #fff; background-color: transparent; color: #fff;
         }
         .timeout-button:hover { background-color: rgba(255,255,255,0.2); }
         .timeout-button:disabled {
-            background-color: rgba(0,0,0,0.2);
-            border-color: #666;
-            color: #666;
-            cursor: not-allowed;
+            background-color: rgba(0,0,0,0.2); border-color: #666; color: #666; cursor: not-allowed;
         }
 
         .manual-controls {
-            display: none;
-            justify-content: center;
-            gap: 30px;
-            margin-top: 20px;
-            flex-wrap: wrap;
+            display: none; justify-content: center; gap: 30px; margin-top: 20px; flex-wrap: wrap;
         }
         .control-group {
-            background-color: #333;
-            padding: 15px;
-            border-radius: 10px;
+            background-color: #333; padding: 15px; border-radius: 10px;
         }
         .control-group h3 { margin-top: 0; }
         .control-group button { font-size: 1em; padding: 8px; margin: 2px; min-width: 45px; }
+        
+        #volleyball-controls { display: none; }
 
         .keyboard-helper {
-            margin-top: 20px;
-            background-color: #222;
-            border: 1px solid #444;
-            padding: 20px;
-            border-radius: 10px;
-            width: 90%;
-            max-width: 1200px;
-            display: none;
+            margin-top: 20px; background-color: #222; border: 1px solid #444; padding: 20px;
+            border-radius: 10px; width: 90%; max-width: 1200px; display: none;
         }
         .keyboard-helper h3 { margin-top: 0; color: #00aaff; }
         .keyboard-helper p { margin: 5px 0; font-size: 1.1em; }
 
         #timeout-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.85);
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.85);
+            display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 1000;
         }
-        #timeout-display {
-            font-size: 15vw;
-            color: #ffc107;
-            font-family: 'Courier New', Courier, monospace;
-        }
+        #timeout-display { font-size: 15vw; color: #ffc107; font-family: 'Courier New', Courier, monospace; }
         #close-timeout-btn {
-            font-size: 1.5em;
-            padding: 10px 30px;
-            margin-top: 30px;
-            background-color: #ffc107;
-            color: #111;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
+            font-size: 1.5em; padding: 10px 30px; margin-top: 30px; background-color: #ffc107;
+            color: #111; border: none; border-radius: 5px; cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .scoreboard {
+                display: flex;
+                flex-direction: column;
+                width: 98%;
+            }
+
+            .center-column {
+                border-left: none;
+                border-right: none;
+                border-top: 2px solid #555;
+                border-bottom: 2px solid #555;
+                padding: 10px;
+                order: -1;
+            }
+
+            .team-logo {
+                width: 120px;
+                height: 120px;
+                border-width: 5px;
+            }
+
+            .team-name {
+                font-size: 2em;
+                min-height: auto;
+            }
+
+            .team-score {
+                font-size: 20vw;
+            }
+
+            #main-timer {
+                font-size: 20vw;
+            }
+
+            .volleyball-point {
+                font-size: 15vw;
+            }
+
+            .info-label {
+                font-size: 1.2em;
+            }
+
+            .info-value {
+                font-size: 2.2em;
+            }
+
+            .config-controls, .manual-controls {
+                gap: 10px;
+                width: 98%;
+            }
         }
 
     </style>
@@ -252,20 +306,29 @@
 
     <img id="league-logo" src="ligalogo.png" alt="Logo da Liga">
 
+    <div class="sport-selector">
+        <label for="sport-select">Escolha o Esporte:</label>
+        <select id="sport-select" onchange="changeSport()">
+            <option value="futsal">Futsal</option>
+            <option value="volleyball">Voleibol</option>
+            <option value="handball">Handebol</option>
+        </select>
+    </div>
+
     <button id="toggle-panel-btn" onclick="toggleOperatorPanel()">Mostrar Painel do Operador</button>
 
     <div class="config-controls">
         <div>
             <label for="team-a-select">Time da Casa:</label>
             <select id="team-a-select" onchange="updateTeam('a')">
-                </select>
+            </select>
         </div>
         <div>
             <label for="team-b-select">Time Visitante:</label>
             <select id="team-b-select" onchange="updateTeam('b')">
-                </select>
+            </select>
         </div>
-        <div>
+        <div id="futsal-duration-controls">
             <label for="timer-duration">Duração:</label>
             <select id="timer-duration" onchange="resetMainTimer()">
                 <option value="900">15 min</option>
@@ -273,7 +336,7 @@
                 <option value="300">5 min</option>
             </select>
         </div>
-        <div>
+        <div id="futsal-half-controls">
             <label for="game-half-select">Tempo:</label>
             <select id="game-half-select" onchange="changeGameHalf()">
                 <option value="1">1º Tempo</option>
@@ -286,37 +349,46 @@
         <div class="team team-a">
             <img id="team-a-logo" src="" alt="Logo Time A" class="team-logo">
             <h2 id="team-a-name" class="team-name">Time A</h2>
-            <div id="team-a-score" class="team-score" onclick="changeScore('a', 1)">0</div>
+            <div id="team-a-score" class="team-score" onclick="clickScore('a')">0</div>
             <div class="team-info">
-                <span class="info-label">FALTAS</span>
-                <span id="team-a-fouls" class="info-value">0</span>
+                <span id="team-a-info-label" class="info-label">FALTAS</span>
+                <span id="team-a-info-value" class="info-value">0</span>
                 <button id="team-a-timeout" class="timeout-button" onclick="requestTimeout('a')">Pedir Tempo</button>
             </div>
         </div>
 
         <div class="center-column">
-            <h2 id="game-half">1º Tempo</h2>
-            <div id="main-timer">15:00</div>
-            <div class="timer-controls">
-                <button id="start-pause-btn" onclick="startPauseMainTimer()">INICIAR</button>
-                <button onclick="resetMainTimer()">REINICIAR TEMPO</button>
+            <h2 id="game-half" class="digital-text">1º Tempo</h2>
+            
+            <div id="main-timer-container">
+                <div id="main-timer">15:00</div>
+                <div class="timer-controls">
+                    <button id="start-pause-btn" onclick="startPauseMainTimer()">INICIAR</button>
+                    <button onclick="resetMainTimer()">REINICIAR TEMPO</button>
+                </div>
+            </div>
+
+            <div id="volleyball-points-container">
+                <div id="vball-point-a" class="volleyball-point">0</div>
+                <h2 id="vball-points-label" class="digital-text">PONTOS</h2>
+                <div id="vball-point-b" class="volleyball-point">0</div>
             </div>
         </div>
 
         <div class="team team-b">
             <img id="team-b-logo" src="" alt="Logo Time B" class="team-logo">
             <h2 id="team-b-name" class="team-name">Time B</h2>
-            <div id="team-b-score" class="team-score" onclick="changeScore('b', 1)">0</div>
+            <div id="team-b-score" class="team-score" onclick="clickScore('b')">0</div>
             <div class="team-info">
-                <span class="info-label">FALTAS</span>
-                <span id="team-b-fouls" class="info-value">0</span>
+                <span id="team-b-info-label" class="info-label">FALTAS</span>
+                <span id="team-b-info-value" class="info-value">0</span>
                 <button id="team-b-timeout" class="timeout-button" onclick="requestTimeout('b')">Pedir Tempo</button>
             </div>
         </div>
     </div>
 
     <div class="manual-controls">
-        <div class="control-group">
+        <div class="control-group futsal-controls">
             <h3>Controle de Gols</h3>
             <button onclick="changeScore('a', 1)">+1 Time A</button>
             <button onclick="changeScore('a', -1)">-1 Time A</button>
@@ -324,7 +396,7 @@
             <button onclick="changeScore('b', 1)">+1 Time B</button>
             <button onclick="changeScore('b', -1)">-1 Time B</button>
         </div>
-        <div class="control-group">
+        <div class="control-group futsal-controls">
             <h3>Controle de Faltas</h3>
             <button onclick="changeFouls('a', 1)">+1 Falta A</button>
             <button onclick="changeFouls('a', -1)">-1 Falta A</button>
@@ -332,7 +404,7 @@
             <button onclick="changeFouls('b', 1)">+1 Falta B</button>
             <button onclick="changeFouls('b', -1)">-1 Falta B</button>
         </div>
-        <div class="control-group">
+        <div class="control-group futsal-controls">
             <h3>Ajuste do Cronômetro</h3>
             <button onclick="adjustMainTimer(60)">+ 1:00</button>
             <button onclick="adjustMainTimer(-60)">- 1:00</button>
@@ -342,13 +414,38 @@
             <br>
             <button onclick="forcePauseTimer()" style="width: 100%; margin-top: 5px; background-color: #ffc107; color: #111;">PAUSAR (Assistente)</button>
         </div>
+
+        <div class="control-group" id="volleyball-controls">
+            <h3>Controle de Voleibol</h3>
+            <p><strong>Pontos:</strong></p>
+            <button onclick="changeVBallPoint('a', 1)">+1 Ponto A</button>
+            <button onclick="changeVBallPoint('a', -1)">-1 Ponto A</button>
+            <br>
+            <button onclick="changeVBallPoint('b', 1)">+1 Ponto B</button>
+            <button onclick="changeVBallPoint('b', -1)">-1 Ponto B</button>
+            <hr>
+            <p><strong>Sets:</strong></p>
+            <button onclick="changeVBallSet('a', 1)">+1 Set A</button>
+            <button onclick="changeVBallSet('a', -1)">-1 Set A</button>
+            <br>
+            <button onclick="changeVBallSet('b', 1)">+1 Set B</button>
+            <button onclick="changeVBallSet('b', -1)">-1 Set B</button>
+        </div>
     </div>
 
     <div class="keyboard-helper">
-        <h3>Atalhos de Teclado</h3>
-        <p><b>Time A (Esquerda):</b> Tecla <b>'+'</b> (Adicionar Gol) | Tecla <b>'-'</b> (Remover Gol)</p>
-        <p><b>Time B (Direita):</b> Tecla <b>'*'</b> (Adicionar Gol - Numpad) | Tecla <b>'/'</b> (Remover Gol - Numpad)</p>
-        <p><b>Cronômetro:</b> <b>'Barra de Espaço'</b> (Iniciar/Pausar)</p>
+        <div class="futsal-controls">
+            <h3>Atalhos de Teclado (Futsal/Handebol)</h3>
+            <p><b>Gols:</b> <b>'+'</b> (Gol A) | <b>'-'</b> (Tira Gol A) | <b>'*'</b> (Gol B) | <b>'/'</b> (Tira Gol B)</p>
+            <p><b>Faltas:</b> Tecla <b>'A'</b> (Falta Time A) | Tecla <b>'L'</b> (Falta Time B)</p>
+            <p><b>Cronômetro:</b> <b>'Espaço'</b> (Iniciar/Pausar)</p>
+            <p><b>Tempo:</b> Tecla <b>'T'</b>, depois <b>'C'</b> (Casa) ou <b>'F'</b> (Fora)</p>
+        </div>
+        <div id="volleyball-key-helper" style="display: none;">
+             <h3>Atalhos de Teclado (Voleibol)</h3>
+            <p><b>Pontos:</b> <b>'+'</b> (Ponto A) | <b>'-'</b> (Tira Ponto A) | <b>'*'</b> (Ponto B) | <b>'/'</b> (Tira Ponto B)</p>
+            <p><b>Tempo:</b> Tecla <b>'T'</b>, depois <b>'C'</b> (Casa) ou <b>'F'</b> (Fora)</p>
+        </div>
     </div>
 
 
@@ -357,36 +454,60 @@
         <button id="close-timeout-btn" onclick="closeTimeoutModal()">Encerrar</button>
     </div>
 
-
     <script>
-        // --- DADOS DOS TIMES ---
-        const teams = {
-            "time1": { name: "1ºB D.S", logo: "time1.png", color: "#00bfff" },
-            "time2": { name: "2ºB D.S", logo: "time2.png", color: "#800080" },
-            "time3": { name: "3ºB Info", logo: "time3.png", color: "#CC0000" },
-            "time4": { name: "3ºA Agro", logo: "time4.png", color: "#800000" }
+        const sportsData = {
+            futsal: {
+                teams: {
+                    "time1": { name: "1ºB D.S", logo: "time1.png", color: "#00bfff", color2: "#111" },
+                    "time2": { name: "2ºB D.S", logo: "time2.png", color: "#800080", color2: "#111" },
+                    "time3": { name: "3ºB Info", logo: "time3.png", color: "#CC0000", color2: "#111" },
+                    "time4": { name: "3ºA Agro", logo: "time4.png", color: "#800000", color2: "#111" }
+                }
+            },
+            volleyball: {
+                teams: {
+                    "1volei": { name: "3ºInfo", logo: "1volei.png", color: "#B22222", color2: "#FF6347" },
+                    "2volei": { name: "3ºJ.P", logo: "2volei.png", color: "#808080", color2: "#CCCCCC" }
+                }
+            },
+            handball: {
+                teams: {
+                    "1hand": { name: "Panteras", logo: "1hand.jpg", color: "#008000", color2: "#90EE90" },
+                    "2hand": { name: "Fênix", logo: "2hand.jpg", color: "#FF69B4", color2: "#800000" }
+                }
+            }
         };
 
-        // --- VARIÁVEIS DE ESTADO DO JOGO ---
+        let currentSport = 'futsal';
+        
         let mainTimerInterval;
         let mainTimerSeconds = 900;
         let mainTimerRunning = false;
-        
-        let timeoutTimerInterval;
-        let timeoutTimerSeconds = 60;
-
         let score = { a: 0, b: 0 };
         let fouls = { a: 0, b: 0 };
         let currentHalf = 1;
         let timeoutsUsed = { a: { 1: false, 2: false }, b: { 1: false, 2: false } };
 
-        // --- REFERÊNCIAS AOS ELEMENTOS DO HTML (DOM) ---
+        let vballPoints = { a: 0, b: 0 };
+        let vballSets = { a: 0, b: 0 };
+
+        let timeoutTimerInterval;
+        let timeoutTimerSeconds = 60;
+        let isWaitingForTimeoutKey = false;
+
         const dom = {
+            sportSelect: document.getElementById('sport-select'),
             togglePanelBtn: document.getElementById('toggle-panel-btn'),
             configControls: document.querySelector('.config-controls'),
             manualControls: document.querySelector('.manual-controls'),
             keyboardHelper: document.querySelector('.keyboard-helper'),
             
+            futsalDuration: document.getElementById('futsal-duration-controls'),
+            futsalHalf: document.getElementById('futsal-half-controls'),
+            futsalControls: document.querySelectorAll('.futsal-controls'),
+            volleyballControls: document.getElementById('volleyball-controls'),
+            volleyballKeyHelper: document.getElementById('volleyball-key-helper'),
+
             teamASelect: document.getElementById('team-a-select'),
             teamBSelect: document.getElementById('team-b-select'),
             
@@ -394,44 +515,47 @@
             teamALogo: document.getElementById('team-a-logo'),
             teamAName: document.getElementById('team-a-name'),
             teamAScore: document.getElementById('team-a-score'),
-            teamAFouls: document.getElementById('team-a-fouls'),
+            teamAInfoLabel: document.getElementById('team-a-info-label'),
+            teamAInfoValue: document.getElementById('team-a-info-value'),
             teamATimeoutBtn: document.getElementById('team-a-timeout'),
             
             teamBDiv: document.querySelector('.team-b'),
             teamBLogo: document.getElementById('team-b-logo'),
             teamBName: document.getElementById('team-b-name'),
             teamBScore: document.getElementById('team-b-score'),
-            teamBFouls: document.getElementById('team-b-fouls'),
+            teamBInfoLabel: document.getElementById('team-b-info-label'),
+            teamBInfoValue: document.getElementById('team-b-info-value'),
             teamBTimeoutBtn: document.getElementById('team-b-timeout'),
 
+            mainTimerContainer: document.getElementById('main-timer-container'),
             mainTimerDisplay: document.getElementById('main-timer'),
             startPauseBtn: document.getElementById('start-pause-btn'),
             durationSelect: document.getElementById('timer-duration'),
             halfSelect: document.getElementById('game-half-select'),
             halfDisplay: document.getElementById('game-half'),
+            
+            vballPointsContainer: document.getElementById('volleyball-points-container'),
+            vballPointA: document.getElementById('vball-point-a'),
+            vballPointB: document.getElementById('vball-point-b'),
 
             timeoutModal: document.getElementById('timeout-modal'),
             timeoutDisplay: document.getElementById('timeout-display')
         };
         
-        // --- FUNÇÃO PARA MOSTRAR/ESCONDER PAINÉIS ---
-        function toggleOperatorPanel() {
-            const panels = [dom.configControls, dom.manualControls, dom.keyboardHelper];
-            
-            if (window.getComputedStyle(dom.configControls).display === 'flex') {
-                panels.forEach(panel => panel.style.display = 'none');
-                dom.togglePanelBtn.textContent = 'Mostrar Painel do Operador';
-            } else {
-                dom.configControls.style.display = 'flex';
-                dom.manualControls.style.display = 'flex';
-                dom.keyboardHelper.style.display = 'block';
-                dom.togglePanelBtn.textContent = 'Esconder Painel do Operador';
-            }
+        function changeSport() {
+            currentSport = dom.sportSelect.value;
+            populateTeamSelectors(currentSport);
+            updateLayoutForSport(currentSport);
+            toggleOperatorPanel(true);
         }
 
-        // --- INICIALIZAÇÃO ---
-        function initializeSelectors() {
-            Object.keys(teams).forEach(key => {
+        function populateTeamSelectors(sport) {
+            const teams = sportsData[sport].teams;
+            dom.teamASelect.innerHTML = '';
+            dom.teamBSelect.innerHTML = '';
+            const teamKeys = Object.keys(teams);
+            
+            teamKeys.forEach(key => {
                 let optionA = document.createElement('option');
                 optionA.value = key;
                 optionA.textContent = teams[key].name;
@@ -442,14 +566,71 @@
                 optionB.textContent = teams[key].name;
                 dom.teamBSelect.appendChild(optionB);
             });
-            dom.teamASelect.value = "time1";
-            dom.teamBSelect.value = "time2";
+
+            if (teamKeys.length > 1) {
+                dom.teamASelect.value = teamKeys[0];
+                dom.teamBSelect.value = teamKeys[1];
+            }
             updateTeam('a');
             updateTeam('b');
-            resetMainTimer();
         }
 
-        // --- FUNÇÕES DE CONTROLE DOS TIMES ---
+        function updateLayoutForSport(sport) {
+            if (sport === 'futsal' || sport === 'handball') {
+                dom.mainTimerContainer.style.display = 'block';
+                dom.futsalDuration.style.display = 'block';
+                dom.futsalHalf.style.display = 'block';
+                dom.halfDisplay.style.display = 'block';
+                dom.vballPointsContainer.style.display = 'none';
+                
+                dom.teamAInfoLabel.textContent = 'FALTAS';
+                dom.teamBInfoLabel.textContent = 'FALTAS';
+                
+                dom.futsalControls.forEach(el => el.style.display = 'block');
+                dom.volleyballControls.style.display = 'none';
+                dom.volleyballKeyHelper.style.display = 'none';
+
+                resetFutsalGame();
+                
+            } else if (sport === 'volleyball') {
+                dom.mainTimerContainer.style.display = 'none';
+                dom.futsalDuration.style.display = 'none';
+                dom.futsalHalf.style.display = 'none';
+                dom.halfDisplay.style.display = 'none';
+                dom.vballPointsContainer.style.display = 'flex';
+                
+                dom.teamAInfoLabel.textContent = 'TIMEOUTS';
+                dom.teamBInfoLabel.textContent = 'TIMEOUTS';
+                
+                dom.futsalControls.forEach(el => el.style.display = 'none');
+                dom.volleyballControls.style.display = 'block';
+                dom.volleyballKeyHelper.style.display = 'block';
+
+                resetVolleyballGame();
+            }
+        }
+
+        function toggleOperatorPanel(forceHide = false) {
+            const panels = [dom.configControls, dom.manualControls, dom.keyboardHelper];
+            const isVisible = window.getComputedStyle(dom.configControls).display === 'flex';
+
+            if (forceHide || isVisible) {
+                panels.forEach(panel => panel.style.display = 'none');
+                dom.togglePanelBtn.textContent = 'Mostrar Painel do Operador';
+            } else {
+                dom.configControls.style.display = 'flex';
+                dom.manualControls.style.display = 'flex';
+                dom.keyboardHelper.style.display = 'block';
+                dom.togglePanelBtn.textContent = 'Esconder Painel do Operador';
+                updateLayoutForSport(currentSport);
+            }
+        }
+
+        window.onload = () => {
+            populateTeamSelectors(currentSport);
+            updateLayoutForSport(currentSport);
+        };
+        
         function updateTeam(team) {
             const selectEl = (team === 'a') ? dom.teamASelect : dom.teamBSelect;
             const logoEl = (team === 'a') ? dom.teamALogo : dom.teamBLogo;
@@ -457,14 +638,42 @@
             const teamDiv = (team === 'a') ? dom.teamADiv : dom.teamBDiv;
             
             const teamKey = selectEl.value;
-            if (teamKey && teams[teamKey]) {
-                logoEl.src = teams[teamKey].logo;
-                nameEl.textContent = teams[teamKey].name;
-                teamDiv.style.backgroundImage = `linear-gradient(135deg, ${teams[teamKey].color} 0%, #111 100%)`;
+            const teamData = sportsData[currentSport].teams[teamKey];
+            
+            if (teamKey && teamData) {
+                logoEl.src = teamData.logo;
+                nameEl.textContent = teamData.name;
+                teamDiv.style.backgroundImage = `linear-gradient(135deg, ${teamData.color} 0%, ${teamData.color2} 100%)`;
+            }
+        }
+        
+        function clickScore(team) {
+            if (currentSport === 'futsal' || currentSport === 'handball') {
+                changeScore(team, 1);
             }
         }
 
-        // --- FUNÇÕES DO CRONÔMETRO PRINCIPAL ---
+        function resetFutsalGame() {
+            score = { a: 0, b: 0 };
+            fouls = { a: 0, b: 0 };
+            dom.teamAScore.textContent = 0;
+            dom.teamBScore.textContent = 0;
+            dom.teamAInfoValue.textContent = 0;
+            dom.teamBInfoValue.textContent = 0;
+            resetMainTimer();
+        }
+        
+        function resetVolleyballGame() {
+            vballPoints = { a: 0, b: 0 };
+            vballSets = { a: 0, b: 0 };
+            dom.vballPointA.textContent = 0;
+            dom.vballPointB.textContent = 0;
+            dom.teamAScore.textContent = 0;
+            dom.teamBScore.textContent = 0;
+            dom.teamAInfoValue.textContent = 0;
+            dom.teamBInfoValue.textContent = 0;
+        }
+
         function startPauseMainTimer() {
             if (mainTimerRunning) {
                 clearInterval(mainTimerInterval);
@@ -487,7 +696,7 @@
                 mainTimerRunning = false;
                 dom.startPauseBtn.textContent = "INICIAR";
                 dom.mainTimerDisplay.classList.add('timer-ended');
-                alert("FIM DO TEMPO!");
+                // alert("FIM DO TEMPO!"); // REMOVIDO
             }
         }
 
@@ -509,25 +718,18 @@
         function adjustMainTimer(seconds) {
             mainTimerSeconds += seconds;
             if (mainTimerSeconds < 0) mainTimerSeconds = 0;
-            
             if (mainTimerSeconds > 0) {
                 dom.mainTimerDisplay.classList.remove('timer-ended');
             }
-            
             updateMainTimerDisplay();
         }
-
-        // NOVO: Função do botão assistente de pausa
+        
         function forcePauseTimer() {
             if (mainTimerRunning) {
-                clearInterval(mainTimerInterval);
-                mainTimerRunning = false;
-                dom.startPauseBtn.textContent = "CONTINUAR";
+                startPauseMainTimer();
             }
-            // Se já estiver pausado, não faz nada
         }
 
-        // --- FUNÇÕES DE PONTUAÇÃO E FALTAS ---
         function changeScore(team, amount) {
             score[team] += amount;
             if (score[team] < 0) score[team] = 0;
@@ -538,70 +740,84 @@
             fouls[team] += amount;
             if (fouls[team] < 0) fouls[team] = 0;
             
-            const foulEl = (team === 'a') ? dom.teamAFouls : dom.teamBFouls;
+            const foulEl = (team === 'a') ? dom.teamAInfoValue : dom.teamBInfoValue;
             foulEl.textContent = fouls[team];
             
             if (fouls[team] >= 5) {
                 foulEl.classList.add('alert');
-                if (amount > 0) {
-                    alert(`ALERTA: 5ª falta do ${teams[dom[team === 'a' ? 'teamASelect' : 'teamBSelect'].value].name}!`);
-                }
+                // if (amount > 0) {
+                //     alert(`ALERTA: 5ª falta!`); // REMOVIDO
+                // }
             } else {
                 foulEl.classList.remove('alert');
             }
         }
 
-        // --- FUNÇÕES DE TEMPO DE JOGO (HALF) ---
         function changeGameHalf() {
             currentHalf = parseInt(dom.halfSelect.value, 10);
             dom.halfDisplay.textContent = `${currentHalf}º Tempo`;
             fouls.a = 0;
             fouls.b = 0;
-            updateFoulDisplay();
+            dom.teamAInfoValue.textContent = 0;
+            dom.teamBInfoValue.textContent = 0;
+            dom.teamAInfoValue.classList.remove('alert');
+            dom.teamBInfoValue.classList.remove('alert');
             checkTimeoutButtons();
             resetMainTimer();
         }
-
-        function updateFoulDisplay() {
-            dom.teamAFouls.textContent = fouls.a;
-            dom.teamBFouls.textContent = fouls.b;
-            dom.teamAFouls.classList.remove('alert');
-            dom.teamBFouls.classList.remove('alert');
+        
+        function changeVBallPoint(team, amount) {
+            vballPoints[team] += amount;
+            if (vballPoints[team] < 0) vballPoints[team] = 0;
+            dom[team === 'a' ? 'vballPointA' : 'vballPointB'].textContent = vballPoints[team];
         }
 
-        // --- FUNÇÕES DE TEMPO PEDIDO (TIMEOUT) ---
+        function changeVBallSet(team, amount) {
+            vballSets[team] += amount;
+            if (vballSets[team] < 0) vballSets[team] = 0;
+            if (vballSets[team] > 5) vballSets[team] = 5;
+            dom[team === 'a' ? 'teamAScore' : 'teamBScore'].textContent = vballSets[team];
+        }
+
         function checkTimeoutButtons() {
-            dom.teamATimeoutBtn.disabled = timeoutsUsed.a[currentHalf];
-            dom.teamBTimeoutBtn.disabled = timeoutsUsed.b[currentHalf];
+            if (currentSport === 'futsal' || currentSport === 'handball') {
+                dom.teamATimeoutBtn.disabled = timeoutsUsed.a[currentHalf];
+                dom.teamBTimeoutBtn.disabled = timeoutsUsed.b[currentHalf];
+            } else {
+                dom.teamATimeoutBtn.disabled = false;
+                dom.teamBTimeoutBtn.disabled = false;
+            }
         }
 
         function requestTimeout(team) {
-            if (timeoutsUsed[team][currentHalf]) {
-                alert("Tempo já utilizado neste período.");
-                return;
-            }
             if (mainTimerRunning) {
                 startPauseMainTimer();
             }
-            timeoutsUsed[team][currentHalf] = true;
-            (team === 'a' ? dom.teamATimeoutBtn : dom.teamBTimeoutBtn).disabled = true;
+            
+            if (currentSport === 'futsal' || currentSport === 'handball') {
+                if (timeoutsUsed[team][currentHalf]) {
+                    // alert("Tempo já utilizado neste período."); // REMOVIDO
+                    return; // Simplesmente não faz nada se já usou
+                }
+                timeoutsUsed[team][currentHalf] = true;
+                (team === 'a' ? dom.teamATimeoutBtn : dom.teamBTimeoutBtn).disabled = true;
+            }
+            
             startTimeoutTimer();
         }
 
         function startTimeoutTimer() {
-            timeoutTimerSeconds = 60;
-            dom.timeoutDisplay.textContent = `01:00`;
+            timeoutTimerSeconds = (currentSport === 'volleyball') ? 30 : 60;
+            dom.timeoutDisplay.textContent = pad(Math.floor(timeoutTimerSeconds / 60)) + ":" + pad(timeoutTimerSeconds % 60);
             dom.timeoutModal.style.display = 'flex';
 
             timeoutTimerInterval = setInterval(() => {
                 timeoutTimerSeconds--;
-                const minutes = Math.floor(timeoutTimerSeconds / 60);
-                const seconds = timeoutTimerSeconds % 60;
-                dom.timeoutDisplay.textContent = `${pad(minutes)}:${pad(seconds)}`;
+                dom.timeoutDisplay.textContent = pad(Math.floor(timeoutTimerSeconds / 60)) + ":" + pad(timeoutTimerSeconds % 60);
 
                 if (timeoutTimerSeconds <= 0) {
                     closeTimeoutModal();
-                    alert("Fim do tempo pedido!");
+                    // alert("Fim do tempo pedido!"); // REMOVIDO
                 }
             }, 1000);
         }
@@ -611,40 +827,68 @@
             dom.timeoutModal.style.display = 'none';
         }
 
-        // --- FUNÇÃO UTILITÁRIA ---
         function pad(num) {
             return num < 10 ? '0' + num : num;
         }
 
-        // --- ATALHOS DE TECLADO ---
         window.addEventListener('keydown', function(e) {
             if (document.activeElement.tagName === 'SELECT' || document.activeElement.tagName === 'BUTTON') {
                 return;
             }
-            if (e.key === ' ' || e.key === '/' || e.key === '+' || e.key === '-') {
+
+            if (isWaitingForTimeoutKey) {
+                e.preventDefault();
+                let key = e.key.toLowerCase();
+                if (key === 'c') {
+                    requestTimeout('a');
+                } else if (key === 'f') {
+                    requestTimeout('b');
+                }
+                
+                isWaitingForTimeoutKey = false;
+                dom.teamATimeoutBtn.classList.remove('waiting-for-key');
+                dom.teamBTimeoutBtn.classList.remove('waiting-for-key');
+                return;
+            }
+
+            if ([' ', '/', '+', '-', 't', 'a', 'l'].includes(e.key.toLowerCase())) {
                 e.preventDefault();
             }
-            switch(e.key) {
-                case '+': case '=':
-                    changeScore('a', 1);
-                    break;
-                case '-': case '_':
-                    changeScore('a', -1);
-                    break;
-                case '*':
-                    changeScore('b', 1);
-                    break;
-                case '/':
-                    changeScore('b', -1);
-                    break;
-                case ' ':
-                    startPauseMainTimer();
-                    break;
+
+            if (e.key.toLowerCase() === 't') {
+                isWaitingForTimeoutKey = true;
+                dom.teamATimeoutBtn.classList.add('waiting-for-key');
+                dom.teamBTimeoutBtn.classList.add('waiting-for-key');
+                return;
+            }
+            
+            if (e.key === 'Escape') {
+                 if (isWaitingForTimeoutKey) {
+                     isWaitingForTimeoutKey = false;
+                     dom.teamATimeoutBtn.classList.remove('waiting-for-key');
+                     dom.teamBTimeoutBtn.classList.remove('waiting-for-key');
+                 }
+            }
+
+            if (currentSport === 'futsal' || currentSport === 'handball') {
+                switch(e.key.toLowerCase()) {
+                    case '+': case '=': changeScore('a', 1); break;
+                    case '-': case '_': changeScore('a', -1); break;
+                    case '*': changeScore('b', 1); break;
+                    case '/': changeScore('b', -1); break;
+                    case ' ': startPauseMainTimer(); break;
+                    case 'a': changeFouls('a', 1); break;
+                    case 'l': changeFouls('b', 1); break;
+                }
+            } else if (currentSport === 'volleyball') {
+                 switch(e.key.toLowerCase()) {
+                    case '+': case '=': changeVBallPoint('a', 1); break;
+                    case '-': case '_': changeVBallPoint('a', -1); break;
+                    case '*': changeVBallPoint('b', 1); break;
+                    case '/': changeVBallPoint('b', -1); break;
+                }
             }
         });
-
-        // --- INICIAR A APLICAÇÃO ---
-        window.onload = initializeSelectors;
 
     </script>
 </body>
